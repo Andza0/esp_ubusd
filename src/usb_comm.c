@@ -1,24 +1,24 @@
 #include "usb_comm.h"
 
-int get_port_vidpid(int vid, int pid, struct sp_port *port)
+int get_port_vidpid(int vid, int pid, struct sp_port **port)
 {
     struct sp_port **port_list;
 
-    if(sp_list_port_list(&port_list) != SP_OK){
+    if(sp_list_ports(&port_list) != SP_OK){
         return -1;
     }
 
     struct sp_port *current;
-    for(current = port_list[0]; current != NULL; current = port_list++){
+    for(int i = 0; port_list[i] != NULL; i++){
 
+        current = port_list[i];
         if(sp_get_port_transport(current) != SP_TRANSPORT_USB){
             continue;
         }
 
         int dev_vid, dev_pid;
-        sp_get_port_usb_vid_pid(current, &dev_vid, &dev_pid);
-
-        if(vid == NULL || pid == NULL){
+        if(sp_get_port_usb_vid_pid(current, &dev_vid, &dev_pid) != SP_OK){
+            printf("Unable to get port's VID and PID");
             continue;
         }
 
@@ -26,10 +26,16 @@ int get_port_vidpid(int vid, int pid, struct sp_port *port)
             continue;
         }
 
-        
+        if(sp_copy_port(current, port) != SP_OK){
+            printf("Cannot copy port.\n");
+            sp_free_port_list(port_list);
+            return -1;
+        }
 
+        break;
     }
 
     sp_free_port_list(port_list);
+    return 1;
 
 }
