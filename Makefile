@@ -3,8 +3,8 @@ SRCS := $(wildcard $(SRC_DIR)/*.c)
 OBJECTS = $(SRCS:.c=.o)
 TARGET:= esp_ledd
 
-CFLAGS := -Wall -Werror -pedantic -g
-LDFLAGS := -lserialport
+CFLAGS := -Wall -pedantic -g
+LDFLAGS := -lserialport -lubox -lblobmsg_json -ljson-c -lubus
 
 all: clean $(TARGET)
 .PHONY: all
