@@ -32,10 +32,12 @@ int get_port_vidpid(int vid, int pid, struct sp_port **port)
             return -1;
         }
 
-        break;
+        sp_free_port_list(port_list);
+        printf("port found\n");
+        return 1;
     }
 
     sp_free_port_list(port_list);
-    return 1;
+    return 0;
 
 }

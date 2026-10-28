@@ -9,7 +9,7 @@ int main(void){
     struct sp_port *port = {0};
 
     if(get_port_vidpid(VID, PID, &port) != 1){
-        printf("Failed to find specified port\n");
+        printf("Failed to find port\n");
     }
 
     return 1;
