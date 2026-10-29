@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-#include "usb_comm.h"
 #include "esp_ubus.h"
 
 #define VID 0x10c4
@@ -18,7 +17,7 @@ int main(void){
 
     ubus_add_uloop(ctx);
 
-    int ret = ubus_add_object(ctx, &object);
+    int ret = init_objects(ctx);
     if (ret) {
         fprintf(stderr, "Registration failed: %s\n",
                 ubus_strerror(ret));

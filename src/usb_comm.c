@@ -5,7 +5,7 @@ int get_port_vidpid(int vid, int pid, struct sp_port **port)
     struct sp_port **port_list;
 
     if(sp_list_ports(&port_list) != SP_OK){
-        return ret;
+        return -1;
     }
 
     struct sp_port *current;
@@ -29,7 +29,7 @@ int get_port_vidpid(int vid, int pid, struct sp_port **port)
         if(sp_copy_port(current, port) != SP_OK){
             printf("Cannot copy port.\n");
             sp_free_port_list(port_list);
-            return ret;
+            return -1;
         }
 
         sp_free_port_list(port_list);
@@ -78,7 +78,7 @@ int iterate_port_list(struct blob_buf *buf)
 
     if(sp_list_ports(&port_list) != SP_OK){
         blobmsg_add_string(buf, "ERROR", "Can't get port list");
-        return ret;
+        return -1;
     }
     char *name;
     int vid, pid;
