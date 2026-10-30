@@ -72,7 +72,7 @@ int init_port(struct sp_port *port, int baudrate, int bits, int parity_bit, int 
     return 1;
 }
 
-int iterate_port_list(struct blob_buf *buf)
+int iterate_port_list(struct blob_buf *buf, int target_vid, int target_pid)
 {
     struct sp_port **port_list;
 
@@ -89,15 +89,26 @@ int iterate_port_list(struct blob_buf *buf)
 
         current = port_list[i];
         name = sp_get_port_name(current);
-        sp_get_port_usb_vid_pid(current, &vid, &pid);
 
-        if((name = sp_get_port_name(current)) == NULL || sp_get_port_usb_vid_pid(current, &vid, &pid) == 0){
-            blobmsg_add_string(buf, "ERROR", "Incorrect port");
+        if(name == NULL){
+            continue;
         }
+	
+        sp_get_port_usb_vid_pid(current, &vid, &pid);
+	
+	if(vid != target_vid || pid != target_pid){
+		continue;
+	}
 
-        void *port_table = blobmsg_open_table(buf, name);
-        blobmsg_add_u32(buf, "Vendor ID", vid);
-        blobmsg_add_u32(buf, "Product ID", pid);
+	char hex_vid[8];
+	snprintf(hex_vid, 8, "0x%x", vid);
+
+	char hex_pid[8];
+	snprintf(hex_pid, 8, "0x%x", pid);
+        
+	void *port_table = blobmsg_open_table(buf, name);
+        blobmsg_add_string(buf, "Vendor ID", hex_vid);
+        blobmsg_add_string(buf, "Product ID", hex_pid);
         blobmsg_close_table(buf, port_table);
 
     }

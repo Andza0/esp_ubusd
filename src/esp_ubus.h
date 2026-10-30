@@ -8,6 +8,9 @@
 #include <stdio.h>
 #include "usb_comm.h"
 
+#define VID 0x10c4
+#define PID 0xea60
+
 enum
 {
     LED_PORT,

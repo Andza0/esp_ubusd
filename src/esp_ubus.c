@@ -62,7 +62,7 @@ int get_devices(struct ubus_context *ctx,
     struct blob_buf buf = {0};
     blob_buf_init(&buf, 0);
 
-    iterate_port_list(&buf);
+    iterate_port_list(&buf, VID, PID);
 
     int ret = ubus_send_reply(ctx, req, buf.head);
     blob_buf_free(&buf);

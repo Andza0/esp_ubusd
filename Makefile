@@ -1,20 +1,27 @@
-SRC_DIR := ./src
-SRCS := $(wildcard $(SRC_DIR)/*.c)
-OBJECTS = $(SRCS:.c=.o)
-TARGET:= esp_ledd
+include $(TOPDIR)/rules.mk
 
-CFLAGS := -Wall -pedantic -g
-LDFLAGS := -lserialport -lubox -lblobmsg_json -ljson-c -lubus
+PKG_NAME:=esp_ubusd
+PKG_RELEASE:=1
+PKG_VERSION:=1.0.0
 
-all: clean $(TARGET)
-.PHONY: all
+include $(INCLUDE_DIR)/package.mk
 
-$(TARGET): $(OBJECTS)
-	$(CC) $(OBJECTS) -o $(TARGET) $(LDFLAGS)
+define Package/esp_ubusd
+	CATEGORY:=Base system
+	TITLE:=esp_ubusd
+	DEPENDS:= + +libserialport +libubox +libjson-c +libubus  +libblobmsg-json
+endef
 
-%.o: %.c
-	$(CC) -c $(CFLAGS) $< -o $@
+define Package/esp_ubusd/description
+	Esp control service
+endef
 
-clean:
-	rm -f $(TARGET)
-.PHONY: clean
+define Package/esp_ubusd/install
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/esp_ubusd $(1)/usr/bin
+	$(INSTALL_BIN) ./files/esp_ubusd.init $(1)/etc/init.d/esp_ubusd
+endef
+
+$(eval $(call BuildPackage,esp_ubusd))
+
