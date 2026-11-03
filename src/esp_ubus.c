@@ -171,6 +171,10 @@ static int set_led(char *port_name, int pin, struct blob_buf *buf, struct ubus_c
     size_t data_sz = 32;
     char data[data_sz];
 
+    size_t resp_sz = 128;
+	char response[resp_sz];
+
+    void *table = blobmsg_open_table(buf, "RESPONSE");
     if((ret = sp_get_port_by_name(port_name, &port)) != SP_OK){
         blobmsg_add_string(buf, "ERROR", "Cannot find a port by given name");
         goto end;
@@ -193,15 +197,20 @@ static int set_led(char *port_name, int pin, struct blob_buf *buf, struct ubus_c
         blobmsg_add_string(buf, "ERROR", err);
         goto end;
     }
+
+    ret = sp_blocking_read(port, response, resp_sz, timeout);
+	
+	if (ret > 0){		
+        //response[ret] = '\0';
+        if (!blobmsg_add_json_from_string(buf, response)) {
+            blobmsg_add_string(buf, "ERROR", "Invalid json returned");
+        }
+	}
 	end:
 	sp_close(port);
 	sp_free_port(port);
 	
-	if(ret != data_sz){
-		ubus_send_reply(ctx, req, buf->head);
-		return UBUS_STATUS_UNKNOWN_ERROR;
-	}
-	blobmsg_add_string(buf, "SUCCESS", "Command sent succesfully");
+    blobmsg_close_table(buf, table);
 	ubus_send_reply(ctx, req, buf->head);
 	return UBUS_STATUS_OK;
 
@@ -223,10 +232,23 @@ int read_sensor(char *port_name, int pin, char *sensor, char *model, struct blob
 	size_t resp_sz = 128;
 	char response[resp_sz];
 
+    void *table = blobmsg_open_table(buf, "RESPONSE");
 	if((ret = sp_get_port_by_name(port_name, &port)) != SP_OK){
 		blobmsg_add_string(buf, "ERROR", "Cannot find a port by given name");
 		goto end;
 	}
+
+    int port_vid, port_pid;
+    if(sp_get_port_usb_vid_pid(port, &port_vid, &port_pid) != SP_OK){
+        blobmsg_add_string(buf, "ERROR", "Unable to check port vid:pid");
+        goto end;
+    }
+
+    if(port_vid != VID || port_pid != PID){
+        blobmsg_add_string(buf, "ERROR", "Wrong device type");
+        goto end;
+    }
+
 
 	if((ret = init_port(port, baudrate, bits, parity_bit, stop_bit, flowcontrol)) != 1){
 		snprintf(err, err_sz, "Unable to initialize port: %d", ret);
@@ -234,7 +256,7 @@ int read_sensor(char *port_name, int pin, char *sensor, char *model, struct blob
 		goto end;
 	}
 
-	if(snprintf(data, data_sz, "{\"action\": \"get\", \"pin\": %d, \"model\":\"%s\", \"sensor\":\"%s\"}", pin, model, sensor) < 0){
+	if(snprintf(data, data_sz, "{\"action\": \"get\", \"pin\": %d, \"sensor\":\"%s\", \"model\":\"%s\"}", pin, sensor, model) < 0){
 		blobmsg_add_string(buf, "ERROR", "Cannot format data string");
 		goto end;
 	}
@@ -247,16 +269,13 @@ int read_sensor(char *port_name, int pin, char *sensor, char *model, struct blob
 
 	ret = sp_blocking_read(port, response, resp_sz, timeout);
 	
-	if (ret > 0){
-    		void *table = blobmsg_open_table(buf, "RESPONSE");
-		
-		response[ret] = '\0';
+	if (ret > 0){		
+//		    response[ret] = '\0';
     		if (!blobmsg_add_json_from_string(buf, response)) {
-        	blobmsg_add_string(buf, "ERROR", "Invalid json returned");
+        	    blobmsg_add_string(buf, "ERROR", "Invalid json returned");
     		}
-
-    		blobmsg_close_table(buf, table);
 	}
+    blobmsg_close_table(buf, table);
 	ubus_send_reply(ctx, req, buf->head);
 
 	end:
