@@ -81,7 +81,7 @@ int iterate_port_list(struct blob_buf *buf, int target_vid, int target_pid)
         return -1;
     }
     char *name;
-    int vid, pid;
+    int vid = -1, pid = -1;
     struct sp_port *current;
 
     void *dev_table = blobmsg_open_table(buf, "devices");

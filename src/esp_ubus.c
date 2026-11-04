@@ -145,8 +145,8 @@ int get_sensor(struct ubus_context *ctx,
 
 	char *port_name = blobmsg_get_string(tb[SENSOR_PORT]);
 	int pin = blobmsg_get_u32(tb[SENSOR_PIN]);
-	char *model = blobmsg_get_string(tb[SENSOR]);
-	char *sensor = blobmsg_get_string(tb[MODEL]);
+	char *sensor = blobmsg_get_string(tb[SENSOR]);
+	char *model = blobmsg_get_string(tb[MODEL]);
 
 	struct blob_buf buf = {0};
 	blob_buf_init(&buf, 0);
@@ -207,12 +207,13 @@ static int set_led(char *port_name, int pin, struct blob_buf *buf, struct ubus_c
         }
 	}
 	end:
-	sp_close(port);
-	sp_free_port(port);
 	
     blobmsg_close_table(buf, table);
 	ubus_send_reply(ctx, req, buf->head);
-	return UBUS_STATUS_OK;
+	
+    sp_close(port);
+	sp_free_port(port);
+    return UBUS_STATUS_OK;
 
 }
 
@@ -256,7 +257,7 @@ int read_sensor(char *port_name, int pin, char *sensor, char *model, struct blob
 		goto end;
 	}
 
-	if(snprintf(data, data_sz, "{\"action\": \"get\", \"pin\": %d, \"sensor\":\"%s\", \"model\":\"%s\"}", pin, sensor, model) < 0){
+	if(snprintf(data, data_sz, "{\"action\": \"get\", \"sensor\":\"%s\", \"pin\": %d, \"model\":\"%s\"}", sensor, pin, model) < 0){
 		blobmsg_add_string(buf, "ERROR", "Cannot format data string");
 		goto end;
 	}
@@ -270,16 +271,17 @@ int read_sensor(char *port_name, int pin, char *sensor, char *model, struct blob
 	ret = sp_blocking_read(port, response, resp_sz, timeout);
 	
 	if (ret > 0){		
-//		    response[ret] = '\0';
     		if (!blobmsg_add_json_from_string(buf, response)) {
         	    blobmsg_add_string(buf, "ERROR", "Invalid json returned");
     		}
 	}
-    blobmsg_close_table(buf, table);
-	ubus_send_reply(ctx, req, buf->head);
 
 	end:
-	sp_close(port);
+
+    blobmsg_close_table(buf, table);
+	ubus_send_reply(ctx, req, buf->head);
+	
+    sp_close(port);
 	sp_free_port(port);
 	return UBUS_STATUS_OK;
 }
