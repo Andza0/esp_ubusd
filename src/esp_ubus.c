@@ -204,7 +204,7 @@ static int set_led(char *port_name, int pin, struct blob_buf *buf, struct ubus_c
         if (!blobmsg_add_json_from_string(buf, response)) {
             blobmsg_add_string(buf, "ERROR", "Invalid json returned");
         }
-	}
+    }
 	end:
 	
     blobmsg_close_table(buf, table);
