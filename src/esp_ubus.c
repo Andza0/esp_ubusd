@@ -136,25 +136,25 @@ int get_sensor(struct ubus_context *ctx,
                 const char *method,
                 struct blob_attr *msg)
 {
-	struct blob_attr *tb[__SENSOR_MAX] = {0};
-	if(!msg){
-		return UBUS_STATUS_INVALID_ARGUMENT;
-	}
-	blobmsg_parse(sensor_policy, __SENSOR_MAX, tb, blob_data(msg), blob_len(msg));
-	if (!tb[SENSOR_PORT] || !tb[SENSOR_PIN] || !tb[SENSOR] || !tb[MODEL]){
-		return UBUS_STATUS_INVALID_ARGUMENT;
-	}
+    struct blob_attr *tb[__SENSOR_MAX] = {0};
+    if(!msg){
+        return UBUS_STATUS_INVALID_ARGUMENT;
+    }
+    blobmsg_parse(sensor_policy, __SENSOR_MAX, tb, blob_data(msg), blob_len(msg));
+    if (!tb[SENSOR_PORT] || !tb[SENSOR_PIN] || !tb[SENSOR] || !tb[MODEL]){
+        return UBUS_STATUS_INVALID_ARGUMENT;
+    }
 
-	char *port_name = blobmsg_get_string(tb[SENSOR_PORT]);
-	int pin = blobmsg_get_u32(tb[SENSOR_PIN]);
-	char *sensor = blobmsg_get_string(tb[SENSOR]);
-	char *model = blobmsg_get_string(tb[MODEL]);
+    char *port_name = blobmsg_get_string(tb[SENSOR_PORT]);
+    int pin = blobmsg_get_u32(tb[SENSOR_PIN]);
+    char *sensor = blobmsg_get_string(tb[SENSOR]);
+    char *model = blobmsg_get_string(tb[MODEL]);
 
-	struct blob_buf buf = {0};
-	blob_buf_init(&buf, 0);
-	int ret = read_sensor(port_name, pin, sensor, model, &buf, ctx, req);
-	blob_buf_free(&buf);
-	return ret;
+    struct blob_buf buf = {0};
+    blob_buf_init(&buf, 0);
+    int ret = read_sensor(port_name, pin, sensor, model, &buf, ctx, req);
+    blob_buf_free(&buf);
+    return ret;
 }
 
 static int set_led(char *port_name, int pin, struct blob_buf *buf, struct ubus_context *ctx, struct ubus_request_data *req, char *set)
@@ -220,19 +220,19 @@ static int set_led(char *port_name, int pin, struct blob_buf *buf, struct ubus_c
 
 int read_sensor(char *port_name, int pin, char *sensor, char *model, struct blob_buf *buf, struct ubus_context *ctx, struct ubus_request_data *req)
 {			
-	size_t err_sz = 120;
-	char err[err_sz];
+    size_t err_sz = 120;
+    char err[err_sz];
 
-	int ret;
-	int baudrate = 9600, bits = 8, parity_bit = SP_PARITY_NONE;
-	int stop_bit = 1, flowcontrol = SP_FLOWCONTROL_NONE;
-	int timeout = 3000;
-	struct sp_port *port = {0};
-	size_t data_sz = 64;
-	char data[data_sz];
+    int ret;
+    int baudrate = 9600, bits = 8, parity_bit = SP_PARITY_NONE;
+    int stop_bit = 1, flowcontrol = SP_FLOWCONTROL_NONE;
+    int timeout = 3000;
+    struct sp_port *port = {0};
+    size_t data_sz = 64;
+    char data[data_sz];
 
-	size_t resp_sz = 128;
-	char response[resp_sz];
+    size_t resp_sz = 128;
+    char response[resp_sz];
 
     void *table = blobmsg_open_table(buf, "RESPONSE");
 	if((ret = sp_get_port_by_name(port_name, &port)) != SP_OK){
