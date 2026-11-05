@@ -84,8 +84,9 @@ int led_on(struct ubus_context *ctx,
     blobmsg_parse(led_policy, __LED_MAX, tb,
                   blob_data(msg), blob_len(msg));
 
-    if (!tb[LED_PORT] || !tb[LED_PIN])
+    if (!tb[LED_PORT] || !tb[LED_PIN]){
         return UBUS_STATUS_INVALID_ARGUMENT;
+    }
 
     char *port_name = blobmsg_get_string(tb[LED_PORT]);
     int pin = blobmsg_get_u32(tb[LED_PIN]);
@@ -114,8 +115,9 @@ int led_off(struct ubus_context *ctx,
     blobmsg_parse(led_policy, __LED_MAX, tb,
                   blob_data(msg), blob_len(msg));
 
-    if (!tb[LED_PORT] || !tb[LED_PIN])
+    if (!tb[LED_PORT] || !tb[LED_PIN]){
         return UBUS_STATUS_INVALID_ARGUMENT;
+    }
 
     char *port_name = blobmsg_get_string(tb[LED_PORT]);
     int pin = blobmsg_get_u32(tb[LED_PIN]);
@@ -208,7 +210,7 @@ static int set_led(char *port_name, int pin, struct blob_buf *buf, struct ubus_c
     end:
 	
     blobmsg_close_table(buf, table);
-	ubus_send_reply(ctx, req, buf->head);
+    ubus_send_reply(ctx, req, buf->head);
 	
     sp_close(port);
 	sp_free_port(port);
@@ -250,37 +252,37 @@ int read_sensor(char *port_name, int pin, char *sensor, char *model, struct blob
     }
 
 
-	if((ret = init_port(port, baudrate, bits, parity_bit, stop_bit, flowcontrol)) != 1){
-		snprintf(err, err_sz, "Unable to initialize port: %d", ret);
-		blobmsg_add_string(buf, "ERROR", err);
-		goto end;
-	}
+    if((ret = init_port(port, baudrate, bits, parity_bit, stop_bit, flowcontrol)) != 1){
+        snprintf(err, err_sz, "Unable to initialize port: %d", ret);
+        blobmsg_add_string(buf, "ERROR", err);
+        goto end;
+    }
 
-	if(snprintf(data, data_sz, "{\"action\": \"get\", \"sensor\":\"%s\", \"pin\": %d, \"model\":\"%s\"}", sensor, pin, model) < 0){
-		blobmsg_add_string(buf, "ERROR", "Cannot format data string");
-		goto end;
-	}
-    	
-	ret = sp_blocking_write(port, data, data_sz, timeout);
-	if(ret != data_sz){
-		blobmsg_add_string(buf, "ERROR", "Unable to send get command");
-		goto end;
-	}
+    if(snprintf(data, data_sz, "{\"action\": \"get\", \"sensor\":\"%s\", \"pin\": %d, \"model\":\"%s\"}", sensor, pin, model) < 0){
+        blobmsg_add_string(buf, "ERROR", "Cannot format data string");
+        goto end;
+    }
 
-	ret = sp_blocking_read(port, response, resp_sz, timeout);
-	
-	if (ret > 0){		
-    		if (!blobmsg_add_json_from_string(buf, response)) {
-        	    blobmsg_add_string(buf, "ERROR", "Invalid json returned");
-    		}
-	}
+    ret = sp_blocking_write(port, data, data_sz, timeout);
+    if(ret != data_sz){
+        blobmsg_add_string(buf, "ERROR", "Unable to send get command");
+        goto end;
+    }
 
-	end:
+    ret = sp_blocking_read(port, response, resp_sz, timeout);
+
+    if (ret > 0){		
+        if (!blobmsg_add_json_from_string(buf, response)) {
+            blobmsg_add_string(buf, "ERROR", "Invalid json returned");
+        }
+    }
+
+    end:
 
     blobmsg_close_table(buf, table);
-	ubus_send_reply(ctx, req, buf->head);
-	
+    ubus_send_reply(ctx, req, buf->head);
+
     sp_close(port);
-	sp_free_port(port);
-	return UBUS_STATUS_OK;
+    sp_free_port(port);
+    return UBUS_STATUS_OK;
 }
