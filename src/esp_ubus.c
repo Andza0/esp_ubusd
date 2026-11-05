@@ -200,8 +200,7 @@ static int set_led(char *port_name, int pin, struct blob_buf *buf, struct ubus_c
 
     ret = sp_blocking_read(port, response, resp_sz, timeout);
 	
-	if (ret > 0){		
-        //response[ret] = '\0';
+	if (ret > 0){
         if (!blobmsg_add_json_from_string(buf, response)) {
             blobmsg_add_string(buf, "ERROR", "Invalid json returned");
         }
